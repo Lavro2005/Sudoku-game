@@ -253,6 +253,55 @@ def format_time(secs):
     mat = " " + str(minute) + ":" + str(sec)
     return mat
 
+def move_selection(grid: Grid, dx: int, dy: int) -> bool:
+    """
+    Зміщує поточний вибір клітинки в сітці Sudoku на заданий зсув (dx, dy).
+    
+    :param grid: Екземпляр класу Grid.
+    :param dx: Зсув по горизонталі (-1 — вліво, 1 — вправо, 0 — без змін).
+    :param dy: Зсув по вертикалі (-1 — вгору, 1 — вниз, 0 — без змін).
+    :return: True, якщо переміщення або початковий вибір успішно здійснено, інакше False.
+    :raises TypeError: Якщо grid, dx або dy мають неправильний тип даних.
+    :raises ValueError: Якщо grid знаходиться в некоректному стані (наприклад, 0 рядків/стовпців).
+    """
+    # 1. Валідація типів вхідних даних
+    if not isinstance(grid, Grid):
+        raise TypeError(f"Очікувався об'єкт Grid, отримано: {type(grid).__name__}")
+    
+    # Перевірка типів зсувів (bool є підтипом int у Python, тому відсікаємо його окремо)
+    if isinstance(dx, bool) or not isinstance(dx, int):
+        raise TypeError(f"Параметр dx повинен бути цілим числом (int), отримано: {type(dx).__name__}")
+    if isinstance(dy, bool) or not isinstance(dy, int):
+        raise TypeError(f"Параметр dy повинен бути цілим числом (int), отримано: {type(dy).__name__}")
+
+    # 2. Перевірка цілісності стану об'єкта Grid
+    if not hasattr(grid, 'rows') or not hasattr(grid, 'cols') or grid.rows <= 0 or grid.cols <= 0:
+        raise ValueError("Об'єкт Grid має некоректні розміри рядків або стовпців.")
+
+    try:
+        # Якщо наразі жодної клітинки не вибрано — вибираємо ліву верхню (0, 0)
+        if grid.selected is None:
+            grid.select(0, 0)
+            return True
+
+        current_row, current_col = grid.selected
+
+        # Обчислюємо нові координати з обмеженням у межах сітки [0, max - 1]
+        # max(0, min(new_val, limit - 1)) запобігає виходу за межі поля
+        new_row = max(0, min(current_row + dy, grid.rows - 1))
+        new_col = max(0, min(current_col + dx, grid.cols - 1))
+
+        # Оновлюємо вибір лише за потреби зміни координати
+        if (new_row, new_col) != (current_row, current_col):
+            grid.select(new_row, new_col)
+            return True
+
+        return False
+
+    except (IndexError, AttributeError) as exc:
+        # Обробка неочікуваних внутрішніх збоїв структури grid.cubes або методу select
+        print(f"[Помилка навігації] Не вдалося змінити вибір: {exc}")
+        return False
 
 def main():
     win = pygame.display.set_mode((540,600))
@@ -270,6 +319,17 @@ def main():
             if event.type == pygame.QUIT:
                 run = False
             if event.type == pygame.KEYDOWN:
+                try:
+                    if event.key in (pygame.K_UP, pygame.K_w):
+                        move_selection(board, dx=0, dy=-1)
+                    elif event.key in (pygame.K_DOWN, pygame.K_s):
+                        move_selection(board, dx=0, dy=1)
+                    elif event.key in (pygame.K_LEFT, pygame.K_a):
+                        move_selection(board, dx=-1, dy=0)
+                    elif event.key in (pygame.K_RIGHT, pygame.K_d):
+                        move_selection(board, dx=1, dy=0)
+                except (TypeError, ValueError) as err:
+                    print(f"Помилка при виклику move_selection: {err}")
                 if event.key == pygame.K_1:
                     key = 1
                 if event.key == pygame.K_2:
