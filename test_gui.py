@@ -1,15 +1,17 @@
 import os
-import sys
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 # Запобігаємо відкриттю графічного вікна при запуску Pygame в CI/тестовому середовищі
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 # Безпечний імпорт GUI.py: запобігаємо автоматичному виклику main()
-with patch("pygame.display.set_mode", MagicMock()), \
-     patch("pygame.time.delay", MagicMock()), \
-     patch("time.time", MagicMock(return_value=0)):
+with (
+    patch("pygame.display.set_mode", MagicMock()),
+    patch("pygame.time.delay", MagicMock()),
+    patch("time.time", MagicMock(return_value=0)),
+):
     # Підміняємо функцію main перед виконанням тіла скрипта при імпорті
     with patch.dict("sys.modules", {}):
         import GUI
@@ -19,10 +21,12 @@ with patch("pygame.display.set_mode", MagicMock()), \
 # FIXTURES (Набори тестових даних та моків)
 # ==========================================
 
+
 @pytest.fixture(scope="session", autouse=True)
 def init_pygame():
     """Ініціалізація Pygame у безголовому (headless) режимі для тестування."""
     import pygame
+
     pygame.init()
     pygame.font.init()
     yield
@@ -33,6 +37,7 @@ def init_pygame():
 def mock_window():
     """Фікстура для створення тестової поверхні pygame.Surface."""
     import pygame
+
     return pygame.Surface((540, 600))
 
 
@@ -54,7 +59,7 @@ def sample_board():
         [9, 0, 4, 0, 6, 0, 0, 0, 5],
         [0, 7, 0, 3, 0, 0, 0, 1, 2],
         [1, 2, 0, 0, 0, 7, 4, 0, 0],
-        [0, 4, 9, 2, 0, 6, 0, 0, 7]
+        [0, 4, 9, 2, 0, 6, 0, 0, 7],
     ]
 
 
@@ -62,27 +67,34 @@ def sample_board():
 # 6 ТЕСТОВИХ СЦЕНАРІЇВ
 # ==========================================
 
+
 # Сценарій 1: Нормальні та граничні значення check_game_over
-@pytest.mark.parametrize("strikes, max_strikes, expected", [
-    (0, 5, False),  # Початок гри (0 помилок)
-    (4, 5, False),  # Граничне значення перед поразкою
-    (5, 5, True),   # Граничне значення досягнення ліміту
-    (6, 5, True),   # Перевищення ліміту
-    (3, 3, True),   # Кастомний ліміт
-])
+@pytest.mark.parametrize(
+    "strikes, max_strikes, expected",
+    [
+        (0, 5, False),  # Початок гри (0 помилок)
+        (4, 5, False),  # Граничне значення перед поразкою
+        (5, 5, True),  # Граничне значення досягнення ліміту
+        (6, 5, True),  # Перевищення ліміту
+        (3, 3, True),  # Кастомний ліміт
+    ],
+)
 def test_check_game_over_normal_and_boundary(strikes, max_strikes, expected):
     """Тестування звичайної поведінки та граничних меж check_game_over."""
     assert GUI.check_game_over(strikes, max_strikes) is expected
 
 
 # Сценарій 2: Виняткові ситуації check_game_over (невалідні типи та від'ємні значення)
-@pytest.mark.parametrize("invalid_strikes, invalid_max, expected_exc", [
-    (True, 5, TypeError),      # bool замість int
-    (3, "5", TypeError),       # рядок замість int
-    (-1, 5, ValueError),       # від'ємна кількість помилок
-    (2, 0, ValueError),        # нульовий ліміт max_strikes
-    (2, -5, ValueError),       # від'ємний ліміт max_strikes
-])
+@pytest.mark.parametrize(
+    "invalid_strikes, invalid_max, expected_exc",
+    [
+        (True, 5, TypeError),  # bool замість int
+        (3, "5", TypeError),  # рядок замість int
+        (-1, 5, ValueError),  # від'ємна кількість помилок
+        (2, 0, ValueError),  # нульовий ліміт max_strikes
+        (2, -5, ValueError),  # від'ємний ліміт max_strikes
+    ],
+)
 def test_check_game_over_exceptions(invalid_strikes, invalid_max, expected_exc):
     """Перевірка генерації винятків TypeError та ValueError для check_game_over."""
     with pytest.raises(expected_exc):
@@ -177,7 +189,9 @@ def test_sudoku_rules_and_draw_end_screen_exceptions(sample_board, mock_window):
     with pytest.raises(ValueError, match="Повідомлення message не може бути порожнім"):
         GUI.draw_end_screen(mock_window, "   ", (255, 0, 0))
 
-    with pytest.raises(ValueError, match="Усі компоненти кольору мають бути цілими числами"):
+    with pytest.raises(
+        ValueError, match="Усі компоненти кольору мають бути цілими числами"
+    ):
         GUI.draw_end_screen(mock_window, "VICTORY!", (300, 0, 0))  # 300 > 255
 
     # Успішний виклик без помилок
