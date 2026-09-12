@@ -232,6 +232,53 @@ def valid(bo, num, pos):
     return True
 
 
+def move_selection(grid, dx, dy):
+    """
+    Переміщує виділену клітинку сітки Sudoku на (dx, dy) клітинок,
+    забезпечуючи навігацію клавіатурою (стрілочки / WASD).
+
+    :param grid: об'єкт Grid, у якому потрібно змінити виділену клітинку
+    :param dx: зміщення по горизонталі (стовпці): -1 (вліво), 0, 1 (вправо)
+    :param dy: зміщення по вертикалі (рядки): -1 (вгору), 0, 1 (вниз)
+    :return: True, якщо виділення успішно змінено, інакше False
+    """
+
+    # --- Валідація вхідних даних ---
+    if grid is None:
+        raise ValueError("Об'єкт grid не може бути None")
+
+    if not isinstance(dx, int) or not isinstance(dy, int):
+        raise TypeError("Параметри dx та dy мають бути цілими числами")
+
+    if dx not in (-1, 0, 1) or dy not in (-1, 0, 1):
+        raise ValueError("dx та dy можуть приймати лише значення -1, 0 або 1")
+
+    if not hasattr(grid, "rows") or not hasattr(grid, "cols"):
+        raise AttributeError("Переданий об'єкт grid не має атрибутів rows/cols")
+
+    try:
+        # Якщо жодна клітинка ще не вибрана — обираємо клітинку (0, 0)
+        if grid.selected is None:
+            new_row, new_col = 0, 0
+        else:
+            row, col = grid.selected
+            new_row = row + dy
+            new_col = col + dx
+
+            # Обмежуємо координати межами сітки (не даємо вийти за поле)
+            new_row = max(0, min(grid.rows - 1, new_row))
+            new_col = max(0, min(grid.cols - 1, new_col))
+
+        grid.select(new_row, new_col)
+        return True
+
+    except (TypeError, ValueError, IndexError) as error:
+        # Обробка виняткових ситуацій: некоректні дані виділення,
+        # вихід за межі списку клітинок тощо
+        print(f"Не вдалося перемістити виділення: {error}")
+        return False
+
+
 def redraw_window(win, board, time, strikes):
     win.fill((255,255,255))
     # Draw time
@@ -309,6 +356,26 @@ def main():
                 if event.key == pygame.K_DELETE:
                     board.clear()
                     key = None
+
+                # Навігація клавіатурою: стрілочки
+                if event.key == pygame.K_UP:
+                    move_selection(board, 0, -1)
+                if event.key == pygame.K_DOWN:
+                    move_selection(board, 0, 1)
+                if event.key == pygame.K_LEFT:
+                    move_selection(board, -1, 0)
+                if event.key == pygame.K_RIGHT:
+                    move_selection(board, 1, 0)
+
+                # Навігація клавіатурою: WASD
+                if event.key == pygame.K_w:
+                    move_selection(board, 0, -1)
+                if event.key == pygame.K_s:
+                    move_selection(board, 0, 1)
+                if event.key == pygame.K_a:
+                    move_selection(board, -1, 0)
+                if event.key == pygame.K_d:
+                    move_selection(board, 1, 0)
 
                 if event.key == pygame.K_SPACE:
                     board.solve_gui()
