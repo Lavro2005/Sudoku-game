@@ -47,7 +47,7 @@ def gui_module():
     pygame.event.get = MagicMock(return_value=[quit_event])
 
     try:
-        import GUI  # noqa: E402  (виконує main() один раз і завершується)
+        import GUI
     finally:
         # Повертаємо оригінальну поведінку pygame.event.get для решти тестів
         pygame.event.get = original_event_get

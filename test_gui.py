@@ -39,7 +39,9 @@ def test_valid_detects_row_column_and_box_conflicts(gui_module, solved_board):
     assert gui_module.valid(board, 4, (0, 2)) is False  # 4 вже є у стовпці 2
 
     # Boundary case: конфлікт у блоці 3x3 (кутова клітинка блоку)
-    assert gui_module.valid(board, 3, (0, 2)) is False  # 3 вже є у верхньому лівому блоці
+    assert (
+        gui_module.valid(board, 3, (0, 2)) is False
+    )  # 3 вже є у верхньому лівому блоці
 
     # Boundary case: значення стоїть саме у поточній позиції — конфліктом не вважається
     board[0][2] = 5
@@ -49,7 +51,9 @@ def test_valid_detects_row_column_and_box_conflicts(gui_module, solved_board):
 # ---------------------------------------------------------------------------
 # 2. find_empty() — пошук першої порожньої клітинки
 # ---------------------------------------------------------------------------
-def test_find_empty_normal_and_boundary_cases(gui_module, board_with_one_empty_cell, solved_board):
+def test_find_empty_normal_and_boundary_cases(
+    gui_module, board_with_one_empty_cell, solved_board
+):
     """
     Normal:   на дошці є одна порожня клітинка — має бути знайдена коректно.
     Boundary: повністю заповнена дошка (без нулів) — має повертати None.
@@ -67,9 +71,9 @@ def test_find_empty_normal_and_boundary_cases(gui_module, board_with_one_empty_c
 @pytest.mark.parametrize(
     "seconds, expected",
     [
-        (0, " 0:0"),      # boundary: нульовий час
-        (59, " 0:59"),    # boundary: межа однієї хвилини
-        (60, " 1:0"),     # boundary: рівно одна хвилина
+        (0, " 0:0"),  # boundary: нульовий час
+        (59, " 0:59"),  # boundary: межа однієї хвилини
+        (60, " 1:0"),  # boundary: рівно одна хвилина
         (3661, " 61:1"),  # normal: понад годину
     ],
 )
@@ -150,7 +154,9 @@ def test_draw_end_screen_normal_and_exceptions(gui_module, mock_win):
     Exception: некоректні message/color/win -> ValueError / AttributeError.
     """
     # Normal case
-    result = gui_module.draw_end_screen(mock_win, "GAME OVER", (255, 0, 0), final_time=125)
+    result = gui_module.draw_end_screen(
+        mock_win, "GAME OVER", (255, 0, 0), final_time=125
+    )
     assert result is True
     assert mock_win.blit.call_count >= 2  # текст банера + текст часу
 
