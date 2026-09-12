@@ -279,6 +279,110 @@ def move_selection(grid, dx, dy):
         return False
 
 
+def check_game_over(strikes, max_strikes=5):
+    """
+    Перевіряє, чи кількість помилок (strikes) перевищила допустимий ліміт.
+
+    :param strikes: поточна кількість допущених помилок
+    :param max_strikes: максимально допустима кількість помилок (за замовчуванням 5)
+    :return: True, якщо ліміт помилок перевищено (гру потрібно завершити), інакше False
+    """
+
+    # --- Валідація вхідних даних ---
+    if not isinstance(strikes, int) or isinstance(strikes, bool):
+        raise TypeError("Параметр strikes має бути цілим числом")
+
+    if strikes < 0:
+        raise ValueError("Параметр strikes не може бути від'ємним")
+
+    if not isinstance(max_strikes, int) or isinstance(max_strikes, bool):
+        raise TypeError("Параметр max_strikes має бути цілим числом")
+
+    if max_strikes <= 0:
+        raise ValueError("Параметр max_strikes має бути додатним числом")
+
+    try:
+        return strikes >= max_strikes
+    except TypeError as error:
+        # Захист від несподіваних помилок порівняння
+        print(f"Не вдалося перевірити умову завершення гри: {error}")
+        return False
+
+
+def draw_end_screen(win, message, color, final_time=None):
+    """
+    Малює напівпрозорий банер поверх ігрового поля з підсумковим
+    повідомленням ("VICTORY!" або "GAME OVER") та, за наявності,
+    підсумковим часом гри.
+
+    :param win: поверхня pygame (вікно), на якій потрібно малювати
+    :param message: текст банера, наприклад "VICTORY!" або "GAME OVER"
+    :param color: колір тексту повідомлення у форматі (R, G, B)
+    :param final_time: підсумковий час гри у секундах (необов'язково)
+    :return: True, якщо банер намальовано успішно, інакше False
+    """
+
+    # --- Валідація вхідних даних ---
+    if win is None:
+        raise ValueError("Параметр win не може бути None")
+
+    if not isinstance(message, str) or not message.strip():
+        raise ValueError("Параметр message має бути непорожнім рядком")
+
+    is_valid_color = (
+        isinstance(color, (tuple, list))
+        and len(color) == 3
+        and all(isinstance(c, int) and 0 <= c <= 255 for c in color)
+    )
+    if not is_valid_color:
+        raise ValueError("Параметр color має бути кортежем із трьох цілих чисел (0-255)")
+
+    if final_time is not None and (
+        isinstance(final_time, bool) or not isinstance(final_time, (int, float)) or final_time < 0
+    ):
+        raise TypeError("Параметр final_time має бути невід'ємним числом (секунди) або None")
+
+    try:
+        width, height = win.get_size()
+    except AttributeError as error:
+        raise AttributeError("Об'єкт win має підтримувати метод get_size()") from error
+
+    try:
+        # Напівпрозора підкладка поверх ігрового поля
+        overlay = pygame.Surface((width, height))
+        overlay.set_alpha(200)
+        overlay.fill((255, 255, 255))
+        win.blit(overlay, (0, 0))
+
+        # Основний текст банера
+        title_fnt = pygame.font.SysFont("comicsans", 60)
+        title_text = title_fnt.render(message, 1, tuple(color))
+        win.blit(
+            title_text,
+            (width / 2 - title_text.get_width() / 2, height / 2 - title_text.get_height())
+        )
+
+        # Підсумковий час (якщо переданий)
+        if final_time is not None:
+            time_fnt = pygame.font.SysFont("comicsans", 40)
+            time_str = "Time: " + format_time(int(final_time))
+            time_text = time_fnt.render(time_str, 1, (0, 0, 0))
+            win.blit(
+                time_text,
+                (width / 2 - time_text.get_width() / 2, height / 2 + 10)
+            )
+
+        pygame.display.update()
+        return True
+
+    except pygame.error as error:
+        print(f"Помилка pygame під час малювання екрана завершення гри: {error}")
+        return False
+    except Exception as error:
+        print(f"Непередбачена помилка під час малювання екрана завершення гри: {error}")
+        return False
+
+
 def redraw_window(win, board, time, strikes):
     win.fill((255,255,255))
     # Draw time
@@ -309,14 +413,25 @@ def main():
     run = True
     start = time.time()
     strikes = 0
+
+    game_over = False
+    victory = False
+    frozen_time = 0
+    end_message = ""
+    end_color = (0, 0, 0)
+
     while run:
 
-        play_time = round(time.time() - start)
+        if not game_over and not victory:
+            play_time = round(time.time() - start)
+        else:
+            # Таймер зупинено - показуємо зафіксований підсумковий час
+            play_time = frozen_time
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-            if event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN and not game_over and not victory:
                 if event.key == pygame.K_1:
                     key = 1
                 if event.key == pygame.K_2:
@@ -378,7 +493,12 @@ def main():
                     move_selection(board, 1, 0)
 
                 if event.key == pygame.K_SPACE:
-                    board.solve_gui()
+                    if board.solve_gui() and board.is_finished():
+                        victory = True
+                        frozen_time = play_time
+                        end_message = "VICTORY!"
+                        end_color = (0, 200, 0)
+                        print("Victory")
 
                 if event.key == pygame.K_RETURN:
                     i, j = board.selected
@@ -390,10 +510,23 @@ def main():
                             strikes += 1
                         key = None
 
-                        if board.is_finished():
+                        # Перевірка програшу за кількістю помилок
+                        if check_game_over(strikes):
+                            game_over = True
+                            frozen_time = play_time
+                            end_message = "GAME OVER"
+                            end_color = (255, 0, 0)
                             print("Game over")
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
+                        # Перевірка перемоги (поле заповнене без програшу)
+                        elif board.is_finished():
+                            victory = True
+                            frozen_time = play_time
+                            end_message = "VICTORY!"
+                            end_color = (0, 200, 0)
+                            print("Victory")
+
+            if event.type == pygame.MOUSEBUTTONDOWN and not game_over and not victory:
                 pos = pygame.mouse.get_pos()
                 clicked = board.click(pos)
                 if clicked:
@@ -404,6 +537,10 @@ def main():
             board.sketch(key)
 
         redraw_window(win, board, play_time, strikes)
+
+        if game_over or victory:
+            draw_end_screen(win, end_message, end_color, final_time=frozen_time)
+
         pygame.display.update()
 
 
