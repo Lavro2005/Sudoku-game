@@ -286,92 +286,192 @@ def format_time(secs):
     return mat
 
 
+# Функція для переміщення вибору клавішами зі стрілками
+def move_selection(grid, dx, dy):
+    try:
+        if not grid.selected:
+            grid.select(0, 0)
+            return
+
+        row, col = grid.selected
+        new_row = row + dy
+        new_col = col + dx
+
+        if 0 <= new_row < grid.rows and 0 <= new_col < grid.cols:
+            grid.select(new_row, new_col)
+    except Exception as e:
+        print(f"Помилка під час переміщення вибору: {e}")
+
+# Функція для перевірки кількості помилок
+def check_game_over(strikes, max_strikes=3):
+    try:
+        return strikes >= max_strikes
+    except Exception as e:
+        print(f"Помилка під час перевірки кількості помилок: {e}")
+        return False
+
+# Функція для малювання екрану завершення гри
+def draw_end_screen(win, message, color, play_time):
+    try:
+        overlay = pygame.Surface((540, 600))
+        overlay.set_alpha(200)
+        overlay.fill((255, 255, 255))
+        win.blit(overlay, (0, 0))
+
+        fnt_large = pygame.font.SysFont("comicsans", 60, bold=True)
+        text = fnt_large.render(message, 1, color)
+        win.blit(text, (270 - text.get_width() / 2, 250 - text.get_height() / 2))
+
+        fnt_small = pygame.font.SysFont("comicsans", 30)
+        time_text = fnt_small.render(f"Час: {format_time(play_time)}", 1, (0, 0, 0))
+        win.blit(time_text, (270 - time_text.get_width() / 2, 320))
+
+        restart_text = fnt_small.render("Натисніть R для рестарту", 1, (0, 0, 0))
+        win.blit(restart_text, (270 - restart_text.get_width() / 2, 360))
+
+        pygame.display.update()
+    except Exception as e:
+        print(f"Помилка під час малювання екрану завершення: {e}")
+
+# Функція для скидання стану гри
+def reset_game(board_template, win):
+    try:
+        import time
+        start = time.time()
+        strikes = 0
+        game_over = False
+        victory = False
+        
+        # Створення нового екземпляра сітки
+        new_grid = Grid(9, 9, 540, 540, win)
+        # Примусово встановлюємо значення з шаблону
+        for i in range(new_grid.rows):
+            for j in range(new_grid.cols):
+                new_grid.cubes[i][j].set(board_template[i][j])
+                new_grid.cubes[i][j].set_temp(0)
+        new_grid.update_model()
+        new_grid.selected = None
+        
+        return new_grid, start, strikes, game_over, victory
+    except Exception as e:
+        print(f"Помилка під час скидання гри: {e}")
+        import time
+        # Повертаємо хоча б поточний час, щоб уникнути помилок розпакування
+        return None, time.time(), 0, False, False
+
 # Головна функція
 def main():
-    win = pygame.display.set_mode((540,600))
-    pygame.display.set_caption("Sudoku")
-    board = Grid(9, 9, 540, 540, win)
-    key = None
-    run = True
-    start = time.time()
-    strikes = 0
-    while run:
+    try:
+        win = pygame.display.set_mode((540,600))
+        pygame.display.set_caption("Sudoku")
+        board = Grid(9, 9, 540, 540, win)
+        
+        # Збереження початкового масиву
+        board_template = [row[:] for row in Grid.board]
+        
+        key = None
+        run = True
+        start = time.time()
+        strikes = 0
+        
+        game_over = False
+        victory = False
+        final_time = 0
+        
+        while run:
+            if not game_over and not victory:
+                play_time = round(time.time() - start)
 
-        play_time = round(time.time() - start)
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_1:
-                    key = 1
-                if event.key == pygame.K_2:
-                    key = 2
-                if event.key == pygame.K_3:
-                    key = 3
-                if event.key == pygame.K_4:
-                    key = 4
-                if event.key == pygame.K_5:
-                    key = 5
-                if event.key == pygame.K_6:
-                    key = 6
-                if event.key == pygame.K_7:
-                    key = 7
-                if event.key == pygame.K_8:
-                    key = 8
-                if event.key == pygame.K_9:
-                    key = 9
-                if event.key == pygame.K_KP1:
-                    key = 1
-                if event.key == pygame.K_KP2:
-                    key = 2
-                if event.key == pygame.K_KP3:
-                    key = 3
-                if event.key == pygame.K_KP4:
-                    key = 4
-                if event.key == pygame.K_KP5:
-                    key = 5
-                if event.key == pygame.K_KP6:
-                    key = 6
-                if event.key == pygame.K_KP7:
-                    key = 7
-                if event.key == pygame.K_KP8:
-                    key = 8
-                if event.key == pygame.K_KP9:
-                    key = 9
-                if event.key == pygame.K_DELETE:
-                    board.clear()
-                    key = None
-
-                if event.key == pygame.K_SPACE:
-                    board.solve_gui()
-
-                if event.key == pygame.K_RETURN:
-                    i, j = board.selected
-                    if board.cubes[i][j].temp != 0:
-                        if board.place(board.cubes[i][j].temp):
-                            print("Success")
-                        else:
-                            print("Wrong")
-                            strikes += 1
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    run = False
+                
+                if event.type == pygame.KEYDOWN:
+                    if game_over or victory:
+                        if event.key == pygame.K_r:
+                            res = reset_game(board_template, win)
+                            if res[0] is not None:
+                                board, start, strikes, game_over, victory = res
+                                key = None
+                        continue
+                    
+                    if event.key == pygame.K_1 or event.key == pygame.K_KP1:
+                        key = 1
+                    if event.key == pygame.K_2 or event.key == pygame.K_KP2:
+                        key = 2
+                    if event.key == pygame.K_3 or event.key == pygame.K_KP3:
+                        key = 3
+                    if event.key == pygame.K_4 or event.key == pygame.K_KP4:
+                        key = 4
+                    if event.key == pygame.K_5 or event.key == pygame.K_KP5:
+                        key = 5
+                    if event.key == pygame.K_6 or event.key == pygame.K_KP6:
+                        key = 6
+                    if event.key == pygame.K_7 or event.key == pygame.K_KP7:
+                        key = 7
+                    if event.key == pygame.K_8 or event.key == pygame.K_KP8:
+                        key = 8
+                    if event.key == pygame.K_9 or event.key == pygame.K_KP9:
+                        key = 9
+                    if event.key == pygame.K_DELETE:
+                        if board.selected:
+                            board.clear()
+                        key = None
+                    if event.key == pygame.K_SPACE:
+                        board.solve_gui()
+                    if event.key == pygame.K_UP:
+                        move_selection(board, 0, -1)
+                        key = None
+                    if event.key == pygame.K_DOWN:
+                        move_selection(board, 0, 1)
+                        key = None
+                    if event.key == pygame.K_LEFT:
+                        move_selection(board, -1, 0)
+                        key = None
+                    if event.key == pygame.K_RIGHT:
+                        move_selection(board, 1, 0)
                         key = None
 
-                        if board.is_finished():
-                            print("Game over")
+                    if event.key == pygame.K_RETURN:
+                        if board.selected:
+                            i, j = board.selected
+                            if board.cubes[i][j].temp != 0:
+                                if board.place(board.cubes[i][j].temp):
+                                    print("Success")
+                                else:
+                                    print("Wrong")
+                                    strikes += 1
+                                    if check_game_over(strikes, 3):
+                                        game_over = True
+                                        final_time = play_time
+                                key = None
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                pos = pygame.mouse.get_pos()
-                clicked = board.click(pos)
-                if clicked:
-                    board.select(clicked[0], clicked[1])
-                    key = None
+                                if board.is_finished():
+                                    print("Game over")
+                                    victory = True
+                                    final_time = play_time
 
-        if board.selected and key != None:
-            board.sketch(key)
+                if event.type == pygame.MOUSEBUTTONDOWN and not game_over and not victory:
+                    pos = pygame.mouse.get_pos()
+                    clicked = board.click(pos)
+                    if clicked:
+                        board.select(clicked[0], clicked[1])
+                        key = None
 
-        redraw_window(win, board, play_time, strikes)
-        pygame.display.update()
+            if not game_over and not victory:
+                if board.selected and key != None:
+                    board.sketch(key)
 
+                redraw_window(win, board, play_time, strikes)
+                pygame.display.update()
+            else:
+                if victory:
+                    draw_end_screen(win, "VICTORY!", (0, 200, 0), final_time)
+                elif game_over:
+                    draw_end_screen(win, "GAME OVER", (200, 0, 0), final_time)
+
+    except Exception as e:
+        print(f"Критична помилка у головному циклі: {e}")
 
 main()
 pygame.quit()
