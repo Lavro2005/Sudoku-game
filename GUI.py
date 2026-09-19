@@ -473,5 +473,6 @@ def main():
     except Exception as e:
         print(f"Критична помилка у головному циклі: {e}")
 
-main()
-pygame.quit()
+if __name__ == "__main__":
+    main()
+    pygame.quit()
