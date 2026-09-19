@@ -202,3 +202,170 @@ Found 13 errors.
 [*] 2 fixable with the `--fix` option (2 hidden fixes can be enabled with the `--unsafe-fixes` option).
 
 `
+
+
+## Test Results after Refactoring
+
+### Date: 2026-09-19 18:58:39
+
+`	ext
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\olehl\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Документи(локальні)\Visual Studio Code projects(локальні)\Sudoku-game
+plugins: cov-7.1.0
+collecting ... collected 6 items
+
+test_gui.py::test_format_time PASSED                                     [ 16%]
+test_gui.py::test_check_game_over PASSED                                 [ 33%]
+test_gui.py::test_find_empty PASSED                                      [ 50%]
+test_gui.py::test_valid PASSED                                           [ 66%]
+test_gui.py::test_move_selection PASSED                                  [ 83%]
+test_gui.py::test_reset_game PASSED                                      [100%]
+
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.13.7-final-0 _______________
+
+Name     Stmts   Miss  Cover
+----------------------------
+GUI.py     323    240    26%
+----------------------------
+TOTAL      323    240    26%
+============================== 6 passed in 0.37s ==============================
+
+`
+
+
+## Ruff Analysis after Refactoring
+
+`	ext
+I001 [*] Import block is un-sorted or un-formatted
+ --> append_ruff_2.py:1:1
+  |
+1 | / import subprocess
+2 | | import io
+  | |_________^
+3 |
+4 |   try:
+  |
+help: Organize imports
+  |
+  - п»їimport subprocess
+  - import io
+1 + п»їimport io
+2 + import subprocess
+3 |
+  |
+
+PLW1510 `subprocess.run` without explicit `check` argument
+ --> append_ruff_2.py:5:14
+  |
+4 | try:
+5 |     result = subprocess.run(["ruff", "check", "."], capture_output=True, text=True)
+  |              ^^^^^^^^^^^^^^
+6 |     output = result.stdout + result.stderr
+7 | except Exception as e:
+  |
+help: Add explicit `check=False`
+
+BLE001 Do not catch blind exception: `Exception`
+ --> append_ruff_2.py:7:8
+  |
+5 |     result = subprocess.run(["ruff", "check", "."], capture_output=True, text=True)
+6 |     output = result.stdout + result.stderr
+7 | except Exception as e:
+  |        ^^^^^^^^^
+8 |     output = str(e)
+  |
+
+UP020 [*] Use builtin `open`
+  --> append_ruff_2.py:12:6
+   |
+10 | content = f"\n\n## Ruff Analysis after Refactoring\n\n`    ext\n{output}\n`\n"
+11 |
+12 | with io.open("TEST_RESULTS.md", "a", encoding="utf-8") as f:
+   |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |     f.write(content)
+   |
+help: Replace with builtin `open`
+   |
+11 |
+   - with io.open("TEST_RESULTS.md", "a", encoding="utf-8") as f:
+12 + with open("TEST_RESULTS.md", "a", encoding="utf-8") as f:
+13 |     f.write(content)
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> append_tests.py:1:1
+  |
+1 | / import subprocess
+2 | | import io
+3 | | import datetime
+  | |_______________^
+4 |
+5 |   now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+  |
+help: Organize imports
+  |
+  - п»їimport subprocess
+1 + п»їimport datetime
+2 | import io
+  - import datetime
+3 + import subprocess
+4 |
+  |
+
+DTZ005 `datetime.datetime.now()` called without a `tz` argument
+ --> append_tests.py:5:7
+  |
+3 | import datetime
+4 |
+5 | now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+  |       ^^^^^^^^^^^^^^^^^^^^^^^
+6 |
+7 | try:
+  |
+help: Pass a `datetime.timezone` object to the `tz` parameter
+
+PLW1510 `subprocess.run` without explicit `check` argument
+  --> append_tests.py:8:14
+   |
+ 7 | try:
+ 8 |     result = subprocess.run(["pytest", "--cov=GUI", "test_gui.py", "-v", "--tb=short"], capture_output=True, text=True)
+   |              ^^^^^^^^^^^^^^
+ 9 |     output = result.stdout + result.stderr
+10 | except Exception as e:
+   |
+help: Add explicit `check=False`
+
+BLE001 Do not catch blind exception: `Exception`
+  --> append_tests.py:10:8
+   |
+ 8 |     result = subprocess.run(["pytest", "--cov=GUI", "test_gui.py", "-v", "--tb=short"], capture_output=True, text=True)
+ 9 |     output = result.stdout + result.stderr
+10 | except Exception as e:
+   |        ^^^^^^^^^
+11 |     output = str(e)
+   |
+
+UP020 [*] Use builtin `open`
+  --> append_tests.py:15:6
+   |
+13 | content = f"\n\n## Test Results after Refactoring\n\n### Date: {now}\n\n`    ext\n{output}\n`\n"
+14 |
+15 | with io.open("TEST_RESULTS.md", "a", encoding="utf-8") as f:
+   |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+16 |     f.write(content)
+   |
+help: Replace with builtin `open`
+   |
+14 |
+   - with io.open("TEST_RESULTS.md", "a", encoding="utf-8") as f:
+15 + with open("TEST_RESULTS.md", "a", encoding="utf-8") as f:
+16 |     f.write(content)
+   |
+
+Found 9 errors.
+[*] 4 fixable with the `--fix` option.
+
+`

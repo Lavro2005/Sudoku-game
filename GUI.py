@@ -1,5 +1,6 @@
 # GUI.py
 import time
+from typing import ClassVar
 
 import pygame
 
@@ -7,7 +8,7 @@ pygame.font.init()
 
 
 class Grid:
-    board = [
+    board: ClassVar[list[list[int]]] = [
         [7, 8, 0, 4, 0, 0, 1, 2, 0],
         [6, 0, 0, 0, 7, 5, 0, 0, 9],
         [0, 0, 0, 6, 0, 1, 0, 7, 8],
@@ -194,7 +195,7 @@ class Cube:
         if self.temp != 0 and self.value == 0:
             text = fnt.render(str(self.temp), 1, (128,128,128))
             win.blit(text, (x+5, y+5))
-        elif not(self.value == 0):
+        elif self.value != 0:
             text = fnt.render(str(self.value), 1, (0, 0, 0))
             win.blit(text, (x + (gap/2 - text.get_width()/2), y + (gap/2 - text.get_height()/2)))
 
@@ -282,7 +283,6 @@ def redraw_window(win, board, time, strikes):
 def format_time(secs):
     sec = secs%60
     minute = secs//60
-    hour = minute//60
 
     mat = " " + str(minute) + ":" + str(sec)
     return mat
@@ -301,14 +301,14 @@ def move_selection(grid, dx, dy):
 
         if 0 <= new_row < grid.rows and 0 <= new_col < grid.cols:
             grid.select(new_row, new_col)
-    except Exception as e:
+    except (TypeError, ValueError, AttributeError, IndexError) as e:
         print(f"Помилка під час переміщення вибору: {e}")
 
 # Функція для перевірки кількості помилок
 def check_game_over(strikes, max_strikes=3):
     try:
         return strikes >= max_strikes
-    except Exception as e:
+    except (TypeError, ValueError, AttributeError, IndexError) as e:
         print(f"Помилка під час перевірки кількості помилок: {e}")
         return False
 
@@ -332,7 +332,7 @@ def draw_end_screen(win, message, color, play_time):
         win.blit(restart_text, (270 - restart_text.get_width() / 2, 360))
 
         pygame.display.update()
-    except Exception as e:
+    except pygame.error as e:
         print(f"Помилка під час малювання екрану завершення: {e}")
 
 # Функція для скидання стану гри
@@ -355,7 +355,7 @@ def reset_game(board_template, win):
         new_grid.selected = None
         
         return new_grid, start, strikes, game_over, victory
-    except Exception as e:
+    except (TypeError, ValueError, AttributeError, IndexError) as e:
         print(f"Помилка під час скидання гри: {e}")
         import time
         # Повертаємо хоча б поточний час, щоб уникнути помилок розпакування
@@ -415,9 +415,8 @@ def main():
                         key = 8
                     if event.key == pygame.K_9 or event.key == pygame.K_KP9:
                         key = 9
-                    if event.key == pygame.K_DELETE:
-                        if board.selected:
-                            board.clear()
+                    if event.key == pygame.K_DELETE and board.selected:
+                        board.clear()
                         key = None
                     if event.key == pygame.K_SPACE:
                         board.solve_gui()
@@ -434,24 +433,23 @@ def main():
                         move_selection(board, 1, 0)
                         key = None
 
-                    if event.key == pygame.K_RETURN:
-                        if board.selected:
-                            i, j = board.selected
-                            if board.cubes[i][j].temp != 0:
-                                if board.place(board.cubes[i][j].temp):
-                                    print("Success")
-                                else:
-                                    print("Wrong")
-                                    strikes += 1
-                                    if check_game_over(strikes, 3):
-                                        game_over = True
-                                        final_time = play_time
-                                key = None
-
-                                if board.is_finished():
-                                    print("Game over")
-                                    victory = True
+                    if event.key == pygame.K_RETURN and board.selected:
+                        i, j = board.selected
+                        if board.cubes[i][j].temp != 0:
+                            if board.place(board.cubes[i][j].temp):
+                                print("Success")
+                            else:
+                                print("Wrong")
+                                strikes += 1
+                                if check_game_over(strikes, 3):
+                                    game_over = True
                                     final_time = play_time
+                            key = None
+
+                            if board.is_finished():
+                                print("Game over")
+                                victory = True
+                                final_time = play_time
 
                 if event.type == pygame.MOUSEBUTTONDOWN and not game_over and not victory:
                     pos = pygame.mouse.get_pos()
@@ -472,11 +470,8 @@ def main():
                 elif game_over:
                     draw_end_screen(win, "GAME OVER", (200, 0, 0), final_time)
 
-    except Exception as e:
+    except RuntimeError as e:
         print(f"Критична помилка у головному циклі: {e}")
 
-main()
-pygame.quit()
 if __name__ == "__main__":
     main()
-    pygame.quit()
