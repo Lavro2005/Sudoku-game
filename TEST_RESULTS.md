@@ -369,3 +369,100 @@ Found 9 errors.
 [*] 4 fixable with the `--fix` option.
 
 `
+
+
+## Test Results after Final Refactoring
+
+### Date: 2026-09-19 19:24:31
+
+`	ext
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\olehl\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Документи(локальні)\Visual Studio Code projects(локальні)\Sudoku-game
+plugins: cov-7.1.0
+collecting ... collected 6 items
+
+test_gui.py::test_format_time PASSED                                     [ 16%]
+test_gui.py::test_check_game_over PASSED                                 [ 33%]
+test_gui.py::test_find_empty PASSED                                      [ 50%]
+test_gui.py::test_valid PASSED                                           [ 66%]
+test_gui.py::test_move_selection PASSED                                  [ 83%]
+test_gui.py::test_reset_game PASSED                                      [100%]
+
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.13.7-final-0 _______________
+
+Name     Stmts   Miss  Cover
+----------------------------
+GUI.py     325    242    26%
+----------------------------
+TOTAL      325    242    26%
+============================== 6 passed in 0.37s ==============================
+
+`
+
+
+## Ruff Analysis after Final Refactoring
+
+`	ext
+I001 [*] Import block is un-sorted or un-formatted
+ --> run_ruff_final.py:1:1
+  |
+1 | / import subprocess
+2 | | import io
+  | |_________^
+3 |
+4 |   try:
+  |
+help: Organize imports
+  |
+  - п»їimport subprocess
+  - import io
+1 + п»їimport io
+2 + import subprocess
+3 |
+  |
+
+PLW1510 `subprocess.run` without explicit `check` argument
+ --> run_ruff_final.py:5:14
+  |
+4 | try:
+5 |     result = subprocess.run(["ruff", "check", "."], capture_output=True, text=True)
+  |              ^^^^^^^^^^^^^^
+6 |     output = result.stdout + result.stderr
+7 | except Exception as e:
+  |
+help: Add explicit `check=False`
+
+BLE001 Do not catch blind exception: `Exception`
+ --> run_ruff_final.py:7:8
+  |
+5 |     result = subprocess.run(["ruff", "check", "."], capture_output=True, text=True)
+6 |     output = result.stdout + result.stderr
+7 | except Exception as e:
+  |        ^^^^^^^^^
+8 |     output = str(e)
+  |
+
+UP020 [*] Use builtin `open`
+  --> run_ruff_final.py:12:6
+   |
+10 | content = f"\n\n## Ruff Analysis after Final Refactoring\n\n`    ext\n{output}\n`\n"
+11 |
+12 | with io.open("TEST_RESULTS.md", "a", encoding="utf-8") as f:
+   |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |     f.write(content)
+   |
+help: Replace with builtin `open`
+   |
+11 |
+   - with io.open("TEST_RESULTS.md", "a", encoding="utf-8") as f:
+12 + with open("TEST_RESULTS.md", "a", encoding="utf-8") as f:
+13 |     f.write(content)
+   |
+
+Found 4 errors.
+[*] 2 fixable with the `--fix` option.
+
+`
