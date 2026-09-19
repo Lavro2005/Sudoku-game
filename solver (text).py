@@ -1,4 +1,5 @@
 # solver.py
+# Функція для вирішення судоку
 def solve(bo):
     """
     Solves a sudoku board using backtracking
@@ -23,6 +24,7 @@ def solve(bo):
     return False
 
 
+# Функція для перевірки валідності ходу
 def valid(bo, pos, num):
     """
     Returns if the attempted move is valid
@@ -55,6 +57,7 @@ def valid(bo, pos, num):
     return True
 
 
+# Функція для пошуку порожніх клітинок
 def find_empty(bo):
     """
     finds an empty space in the board
@@ -70,6 +73,7 @@ def find_empty(bo):
     return None
 
 
+# Функція для виведення дошки
 def print_board(bo):
     """
     prints the board

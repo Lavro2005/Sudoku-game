@@ -17,6 +17,7 @@ class Grid:
         [0, 4, 9, 2, 0, 6, 0, 0, 7]
     ]
 
+    # Ініціалізація сітки
     def __init__(self, rows, cols, width, height, win):
         self.rows = rows
         self.cols = cols
@@ -28,9 +29,11 @@ class Grid:
         self.selected = None
         self.win = win
 
+    # Оновлення моделі сітки
     def update_model(self):
         self.model = [[self.cubes[i][j].value for j in range(self.cols)] for i in range(self.rows)]
 
+    # Розміщення значення в клітинці
     def place(self, val):
         row, col = self.selected
         if self.cubes[row][col].value == 0:
@@ -45,9 +48,12 @@ class Grid:
                 self.update_model()
                 return False
 
+    # Тимчасове розміщення значення в клітинці (ескіз)
     def sketch(self, val):
         row, col = self.selected
         self.cubes[row][col].set_temp(val)
+
+    # Малювання сітки
 
     def draw(self):
         # Draw Grid Lines
@@ -65,6 +71,8 @@ class Grid:
             for j in range(self.cols):
                 self.cubes[i][j].draw(self.win)
 
+    # Вибір клітинки
+
     def select(self, row, col):
         # Reset all other
         for i in range(self.rows):
@@ -74,10 +82,14 @@ class Grid:
         self.cubes[row][col].selected = True
         self.selected = (row, col)
 
+    # Очищення клітинки
+
     def clear(self):
         row, col = self.selected
         if self.cubes[row][col].value == 0:
             self.cubes[row][col].set_temp(0)
+
+    # Обробка кліку
 
     def click(self, pos):
         """
@@ -92,12 +104,16 @@ class Grid:
         else:
             return None
 
+    # Перевірка чи гра завершена
+
     def is_finished(self):
         for i in range(self.rows):
             for j in range(self.cols):
                 if self.cubes[i][j].value == 0:
                     return False
         return True
+
+    # Вирішення судоку
 
     def solve(self):
         find = find_empty(self.model)
@@ -116,6 +132,8 @@ class Grid:
                 self.model[row][col] = 0
 
         return False
+
+    # Вирішення судоку з візуалізацією
 
     def solve_gui(self):
         self.update_model()
@@ -151,6 +169,8 @@ class Cube:
     rows = 9
     cols = 9
 
+    # Ініціалізація клітинки
+
     def __init__(self, value, row, col, width, height):
         self.value = value
         self.temp = 0
@@ -159,6 +179,8 @@ class Cube:
         self.width = width
         self.height = height
         self.selected = False
+
+    # Малювання клітинки
 
     def draw(self, win):
         fnt = pygame.font.SysFont("comicsans", 40)
@@ -177,6 +199,8 @@ class Cube:
         if self.selected:
             pygame.draw.rect(win, (255,0,0), (x,y, gap ,gap), 3)
 
+    # Малювання зміни в клітинці
+
     def draw_change(self, win, g=True):
         fnt = pygame.font.SysFont("comicsans", 40)
 
@@ -193,13 +217,18 @@ class Cube:
         else:
             pygame.draw.rect(win, (255, 0, 0), (x, y, gap, gap), 3)
 
+    # Встановлення значення
+
     def set(self, val):
         self.value = val
+
+    # Встановлення тимчасового значення
 
     def set_temp(self, val):
         self.temp = val
 
 
+# Пошук порожньої клітинки
 def find_empty(bo):
     for i in range(len(bo)):
         for j in range(len(bo[0])):
@@ -209,6 +238,7 @@ def find_empty(bo):
     return None
 
 
+# Перевірка валідності ходу
 def valid(bo, num, pos):
     # Check row
     for i in range(len(bo[0])):
@@ -232,6 +262,7 @@ def valid(bo, num, pos):
     return True
 
 
+# Перемальовування вікна
 def redraw_window(win, board, time, strikes):
     win.fill((255,255,255))
     # Draw time
@@ -245,6 +276,7 @@ def redraw_window(win, board, time, strikes):
     board.draw()
 
 
+# Форматування часу
 def format_time(secs):
     sec = secs%60
     minute = secs//60
@@ -254,6 +286,7 @@ def format_time(secs):
     return mat
 
 
+# Головна функція
 def main():
     win = pygame.display.set_mode((540,600))
     pygame.display.set_caption("Sudoku")

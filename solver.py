@@ -1,5 +1,6 @@
 # solver.py
 
+# Функція для вирішення судоку за допомогою бектрекінгу
 def solve(bo):
     find = find_empty(bo)
     if not find:
@@ -19,6 +20,7 @@ def solve(bo):
     return False
 
 
+# Функція для перевірки, чи є хід валідним
 def valid(bo, num, pos):
     # Check row
     for i in range(len(bo[0])):
@@ -42,6 +44,7 @@ def valid(bo, num, pos):
     return True
 
 
+# Функція для виведення дошки в консоль
 def print_board(bo):
     for i in range(len(bo)):
         if i % 3 == 0 and i != 0:
@@ -57,6 +60,7 @@ def print_board(bo):
                 print(str(bo[i][j]) + " ", end="")
 
 
+# Функція для пошуку порожньої клітинки на дошці
 def find_empty(bo):
     for i in range(len(bo)):
         for j in range(len(bo[0])):
