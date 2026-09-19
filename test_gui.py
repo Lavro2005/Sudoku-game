@@ -1,9 +1,11 @@
-import pytest
 import time
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 # Імпортуємо функції та класи з GUI.py для тестування
 import GUI
+
 
 # Фікстура для створення тестової дошки
 @pytest.fixture
@@ -129,3 +131,4 @@ def test_reset_game(mock_grid_class, sample_board):
     assert victory is False
     # Переконуємось, що час був скинутий (start близьке до поточного часу)
     assert abs(time.time() - start) < 1.0 
+
