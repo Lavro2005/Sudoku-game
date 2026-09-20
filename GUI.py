@@ -17,6 +17,7 @@ class Grid:
         [0, 4, 9, 2, 0, 6, 0, 0, 7]
     ]
 
+    # Ініціалізує ігрову сітку та її стан.
     def __init__(self, rows, cols, width, height, win):
         self.rows = rows
         self.cols = cols
@@ -28,9 +29,11 @@ class Grid:
         self.selected = None
         self.win = win
 
+    # Синхронізує модель із поточними значеннями клітинок.
     def update_model(self):
         self.model = [[self.cubes[i][j].value for j in range(self.cols)] for i in range(self.rows)]
 
+    # Перевіряє та фіксує число у вибраній клітинці.
     def place(self, val):
         row, col = self.selected
         if self.cubes[row][col].value == 0:
@@ -45,10 +48,12 @@ class Grid:
                 self.update_model()
                 return False
 
+    # Відображає тимчасове число у вибраній клітинці.
     def sketch(self, val):
         row, col = self.selected
         self.cubes[row][col].set_temp(val)
 
+    # Малює лінії сітки та всі клітинки на екрані.
     def draw(self):
         # Draw Grid Lines
         gap = self.width / 9
@@ -65,6 +70,7 @@ class Grid:
             for j in range(self.cols):
                 self.cubes[i][j].draw(self.win)
 
+    # Вибирає клітинку та скасовує попередній вибір.
     def select(self, row, col):
         # Reset all other
         for i in range(self.rows):
@@ -74,11 +80,13 @@ class Grid:
         self.cubes[row][col].selected = True
         self.selected = (row, col)
 
+    # Видаляє тимчасове число з порожньої клітинки.
     def clear(self):
         row, col = self.selected
         if self.cubes[row][col].value == 0:
             self.cubes[row][col].set_temp(0)
 
+    # Перетворює координати миші на координати клітинки.
     def click(self, pos):
         """
         :param: pos
@@ -92,6 +100,7 @@ class Grid:
         else:
             return None
 
+    # Перевіряє, чи заповнена вся дошка.
     def is_finished(self):
         for i in range(self.rows):
             for j in range(self.cols):
@@ -99,6 +108,7 @@ class Grid:
                     return False
         return True
 
+    # Розв'язує дошку методом пошуку з поверненням.
     def solve(self):
         find = find_empty(self.model)
         if not find:
@@ -117,6 +127,7 @@ class Grid:
 
         return False
 
+    # Розв'язує дошку з покроковою анімацією у вікні.
     def solve_gui(self):
         self.update_model()
         find = find_empty(self.model)
@@ -151,6 +162,7 @@ class Cube:
     rows = 9
     cols = 9
 
+    # Ініціалізує одну клітинку дошки.
     def __init__(self, value, row, col, width, height):
         self.value = value
         self.temp = 0
@@ -160,6 +172,7 @@ class Cube:
         self.height = height
         self.selected = False
 
+    # Малює значення та стан вибору клітинки.
     def draw(self, win):
         fnt = pygame.font.SysFont("comicsans", 40)
 
@@ -177,6 +190,7 @@ class Cube:
         if self.selected:
             pygame.draw.rect(win, (255,0,0), (x,y, gap ,gap), 3)
 
+    # Малює зміну клітинки під час розв'язання.
     def draw_change(self, win, g=True):
         fnt = pygame.font.SysFont("comicsans", 40)
 
@@ -193,13 +207,16 @@ class Cube:
         else:
             pygame.draw.rect(win, (255, 0, 0), (x, y, gap, gap), 3)
 
+    # Встановлює постійне значення клітинки.
     def set(self, val):
         self.value = val
 
+    # Встановлює тимчасове значення клітинки.
     def set_temp(self, val):
         self.temp = val
 
 
+# Знаходить першу порожню позицію на дошці.
 def find_empty(bo):
     for i in range(len(bo)):
         for j in range(len(bo[0])):
@@ -209,6 +226,7 @@ def find_empty(bo):
     return None
 
 
+# Перевіряє допустимість числа у вказаній позиції.
 def valid(bo, num, pos):
     # Check row
     for i in range(len(bo[0])):
@@ -232,6 +250,7 @@ def valid(bo, num, pos):
     return True
 
 
+# Оновлює вікно гри, час, помилки та дошку.
 def redraw_window(win, board, time, strikes):
     win.fill((255,255,255))
     # Draw time
@@ -245,6 +264,7 @@ def redraw_window(win, board, time, strikes):
     board.draw()
 
 
+# Перетворює кількість секунд у текстовий формат часу.
 def format_time(secs):
     sec = secs%60
     minute = secs//60
@@ -254,6 +274,7 @@ def format_time(secs):
     return mat
 
 
+# Запускає головний цикл графічної гри.
 def main():
     win = pygame.display.set_mode((540,600))
     pygame.display.set_caption("Sudoku")

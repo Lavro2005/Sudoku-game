@@ -1,4 +1,5 @@
 # solver.py
+# Розв'язує дошку методом пошуку з поверненням.
 def solve(bo):
     """
     Solves a sudoku board using backtracking
@@ -23,6 +24,7 @@ def solve(bo):
     return False
 
 
+# Перевіряє допустимість числа у вказаній позиції.
 def valid(bo, pos, num):
     """
     Returns if the attempted move is valid
@@ -55,6 +57,7 @@ def valid(bo, pos, num):
     return True
 
 
+# Знаходить першу порожню позицію на дошці.
 def find_empty(bo):
     """
     finds an empty space in the board
@@ -70,6 +73,7 @@ def find_empty(bo):
     return None
 
 
+# Виводить дошку у форматі текстової сітки.
 def print_board(bo):
     """
     prints the board

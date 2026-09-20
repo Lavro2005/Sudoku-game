@@ -1,5 +1,6 @@
 # solver.py
 
+# Розв'язує дошку методом пошуку з поверненням.
 def solve(bo):
     find = find_empty(bo)
     if not find:
@@ -19,6 +20,7 @@ def solve(bo):
     return False
 
 
+# Перевіряє допустимість числа у вказаній позиції.
 def valid(bo, num, pos):
     # Check row
     for i in range(len(bo[0])):
@@ -42,6 +44,7 @@ def valid(bo, num, pos):
     return True
 
 
+# Виводить дошку у форматі текстової сітки.
 def print_board(bo):
     for i in range(len(bo)):
         if i % 3 == 0 and i != 0:
@@ -57,6 +60,7 @@ def print_board(bo):
                 print(str(bo[i][j]) + " ", end="")
 
 
+# Знаходить першу порожню позицію на дошці.
 def find_empty(bo):
     for i in range(len(bo)):
         for j in range(len(bo[0])):
