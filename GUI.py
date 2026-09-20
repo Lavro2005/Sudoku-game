@@ -18,10 +18,17 @@ class Grid:
     ]
 
     # Ініціалізує ігрову сітку та її стан.
-    def __init__(self, rows, cols, width, height, win):
+    def __init__(self, rows, cols, width, height, win, board_template=None):
+        if rows <= 0 or cols <= 0 or width <= 0 or height <= 0:
+            raise ValueError("Розміри дошки та вікна мають бути додатними")
+
+        template = board_template if board_template is not None else self.board
+        if len(template) != rows or any(len(row) != cols for row in template):
+            raise ValueError("Шаблон дошки має відповідати її розмірам")
+
         self.rows = rows
         self.cols = cols
-        self.cubes = [[Cube(self.board[i][j], i, j, width, height) for j in range(cols)] for i in range(rows)]
+        self.cubes = [[Cube(template[i][j], i, j, width, height) for j in range(cols)] for i in range(rows)]
         self.width = width
         self.height = height
         self.model = None
@@ -274,23 +281,111 @@ def format_time(secs):
     return mat
 
 
+# Переміщує вибір клітинки за допомогою клавіш зі стрілками.
+def move_selection(grid, dx, dy):
+    if not isinstance(grid, Grid):
+        raise TypeError("grid має бути екземпляром Grid")
+    if isinstance(dx, bool) or not isinstance(dx, int):
+        raise TypeError("dx має бути цілим числом")
+    if isinstance(dy, bool) or not isinstance(dy, int):
+        raise TypeError("dy має бути цілим числом")
+
+    row, col = grid.selected if grid.selected is not None else (0, 0)
+    new_row = max(0, min(grid.rows - 1, row + dy))
+    new_col = max(0, min(grid.cols - 1, col + dx))
+    grid.select(new_row, new_col)
+    return grid.selected
+
+
+# Перевіряє, чи досягнуто максимальної кількості помилок.
+def check_game_over(strikes, max_strikes=3):
+    if isinstance(strikes, bool) or not isinstance(strikes, int) or strikes < 0:
+        raise ValueError("Кількість помилок має бути невід'ємним цілим числом")
+    if isinstance(max_strikes, bool) or not isinstance(max_strikes, int) or max_strikes <= 0:
+        raise ValueError("Ліміт помилок має бути додатним цілим числом")
+    return strikes >= max_strikes
+
+
+# Малює екран завершення гри поверх дошки.
+def draw_end_screen(win, message, color):
+    if win is None or not hasattr(win, "get_size"):
+        raise TypeError("win має бути коректною поверхнею Pygame")
+    if not isinstance(message, str) or not message.strip():
+        raise ValueError("Повідомлення не може бути порожнім")
+    if not isinstance(color, tuple) or len(color) != 3:
+        raise ValueError("color має бути кортежем із трьох компонентів")
+
+    overlay = pygame.Surface(win.get_size(), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 170))
+    win.blit(overlay, (0, 0))
+
+    title_font = pygame.font.SysFont("comicsans", 48, bold=True)
+    text_font = pygame.font.SysFont("comicsans", 28)
+    lines = message.splitlines()
+    total_height = title_font.get_height() + len(lines) * text_font.get_height() + 30
+    y = (win.get_height() - total_height) // 2
+
+    title = title_font.render(lines[0], True, color)
+    win.blit(title, ((win.get_width() - title.get_width()) // 2, y))
+    y += title.get_height() + 15
+
+    for line in lines[1:]:
+        text = text_font.render(line, True, (255, 255, 255))
+        win.blit(text, ((win.get_width() - text.get_width()) // 2, y))
+        y += text.get_height()
+
+
+# Створює нову гру з початковим шаблоном дошки.
+def reset_game(board_template, win=None):
+    if not isinstance(board_template, (list, tuple)) or not board_template:
+        raise ValueError("Шаблон дошки має бути непорожнім списком")
+    if win is None:
+        win = pygame.display.get_surface()
+    if win is None:
+        raise RuntimeError("Для рестарту потрібне активне вікно Pygame")
+
+    board = Grid(9, 9, 540, 540, win, board_template)
+    return board, time.time(), 0, False, False
+
+
 # Запускає головний цикл графічної гри.
 def main():
     win = pygame.display.set_mode((540,600))
     pygame.display.set_caption("Sudoku")
-    board = Grid(9, 9, 540, 540, win)
+    board_template = [row[:] for row in Grid.board]
+    board = Grid(9, 9, 540, 540, win, board_template)
     key = None
     run = True
     start = time.time()
     strikes = 0
+    victory = False
+    game_over = False
     while run:
 
-        play_time = round(time.time() - start)
+        play_time = round(time.time() - start) if not victory and not game_over else round(final_time - start)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
             if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r and (victory or game_over):
+                    board, start, strikes, victory, game_over = reset_game(board_template, win)
+                    key = None
+                    continue
+                if victory or game_over:
+                    continue
+                if event.key == pygame.K_LEFT:
+                    move_selection(board, -1, 0)
+                    key = None
+                if event.key == pygame.K_RIGHT:
+                    move_selection(board, 1, 0)
+                    key = None
+                if event.key == pygame.K_UP:
+                    move_selection(board, 0, -1)
+                    key = None
+                if event.key == pygame.K_DOWN:
+                    move_selection(board, 0, 1)
+                    key = None
                 if event.key == pygame.K_1:
                     key = 1
                 if event.key == pygame.K_2:
@@ -342,10 +437,15 @@ def main():
                         else:
                             print("Wrong")
                             strikes += 1
+                            if check_game_over(strikes):
+                                game_over = True
+                                final_time = time.time()
                         key = None
 
                         if board.is_finished():
-                            print("Game over")
+                            victory = True
+                            final_time = time.time()
+                            print("Victory")
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
@@ -358,6 +458,10 @@ def main():
             board.sketch(key)
 
         redraw_window(win, board, play_time, strikes)
+        if victory:
+            draw_end_screen(win, "VICTORY!\nЧас: " + format_time(play_time) + "\nНатисніть R для рестарту", (0, 180, 0))
+        elif game_over:
+            draw_end_screen(win, "GAME OVER\nЧас: " + format_time(play_time) + "\nНатисніть R для рестарту", (220, 0, 0))
         pygame.display.update()
 
 
