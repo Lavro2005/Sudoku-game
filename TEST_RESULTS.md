@@ -65,3 +65,43 @@ ruff format --check GUI.py solver.py "solver (text).py" test_gui.py
 6. Розділити логіку Sudoku, стан гри та Pygame-відображення на окремі модулі, щоб підвищити тестованість і зменшити зв'язаність.
 7. Додати тести для `main()` через події Pygame, перемоги, поразки та рестарту; поточне покриття становить `46%`.
 8. Додати `.gitignore` для `.coverage`, `__pycache__`, `.pytest_cache` і `.ruff_cache`.
+
+## 2026-09-20: Рефакторинг і повторна перевірка
+
+**Виконані зміни:**
+
+- Ініціалізовано `final_time` у `main()`, щоб таймер не звертався до неіснуючої змінної.
+- Позначено `Grid.board` як `ClassVar` для явного опису незмінного шаблону класу.
+- Прибрано невикористану змінну `hour`.
+- Виправлено порівняння `self.value != 0` і зайві аргументи `range()`.
+- Відсортовано імпорти та відформатовано всі Python-файли через Ruff.
+
+**Unit-тести:**
+
+```text
+pytest test_gui.py -q
+```
+
+**Результат:** `11 passed`.
+
+**Час виконання:** `1.118 с`.
+
+**Синтаксична перевірка:** `python -m py_compile` — успішно для всіх 4 Python-файлів.
+
+**Повторний аналіз Ruff:**
+
+```text
+ruff check GUI.py solver.py "solver (text).py" test_gui.py
+ruff format --check GUI.py solver.py "solver (text).py" test_gui.py
+```
+
+**Результат Ruff:** `ruff check` — `0` порушень; `ruff format --check` — усі `4` файли вже відформатовані.
+
+**Змінені файли:**
+
+- `GUI.py`
+- `solver.py`
+- `solver (text).py`
+- `test_gui.py`
+- `TEST_RESULTS.md`
+- `PROMPTS.md`

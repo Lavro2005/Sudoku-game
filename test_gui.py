@@ -4,18 +4,24 @@ import os
 
 import pytest
 
-
 # Вмикає headless-режим, щоб тести не вимагали графічного дисплея.
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 import pygame
-
 
 pygame.init()
 
 
 # Імпортує GUI.py без запуску гри завдяки захисту main-модуля.
-from GUI import Grid, check_game_over, draw_end_screen, find_empty, format_time
-from GUI import move_selection, reset_game, valid
+from GUI import (
+    Grid,
+    check_game_over,
+    draw_end_screen,
+    find_empty,
+    format_time,
+    move_selection,
+    reset_game,
+    valid,
+)
 
 
 @pytest.fixture
@@ -99,7 +105,9 @@ def test_grid_place_accepts_valid_and_rejects_invalid_values(grid):
 
 # Перевіряє створення нового стану гри та скидання лічильників.
 def test_reset_game_returns_fresh_state(board_template, pygame_window):
-    board, start, strikes, victory, game_over = reset_game(board_template, pygame_window)
+    board, start, strikes, victory, game_over = reset_game(
+        board_template, pygame_window
+    )
     assert isinstance(board, Grid)
     assert start > 0
     assert strikes == 0
@@ -120,7 +128,9 @@ def test_reset_game_rejects_invalid_input():
 
 # Перевіряє малювання фінального екрана та його валідацію.
 def test_draw_end_screen_draws_overlay(pygame_window):
-    draw_end_screen(pygame_window, "VICTORY!\nЧас: 1:20\nНатисніть R для рестарту", (0, 180, 0))
+    draw_end_screen(
+        pygame_window, "VICTORY!\nЧас: 1:20\nНатисніть R для рестарту", (0, 180, 0)
+    )
     assert pygame_window.get_at((0, 0))[:3] == (0, 0, 0)
     with pytest.raises(ValueError):
         draw_end_screen(pygame_window, "", (0, 0, 0))

@@ -1,11 +1,13 @@
-# GUI.py
-import pygame
 import time
+from typing import ClassVar
+
+import pygame
+
 pygame.font.init()
 
 
 class Grid:
-    board = [
+    board: ClassVar[list[list[int]]] = [
         [7, 8, 0, 4, 0, 0, 1, 2, 0],
         [6, 0, 0, 0, 7, 5, 0, 0, 9],
         [0, 0, 0, 6, 0, 1, 0, 7, 8],
@@ -14,7 +16,7 @@ class Grid:
         [9, 0, 4, 0, 6, 0, 0, 0, 5],
         [0, 7, 0, 3, 0, 0, 0, 1, 2],
         [1, 2, 0, 0, 0, 7, 4, 0, 0],
-        [0, 4, 9, 2, 0, 6, 0, 0, 7]
+        [0, 4, 9, 2, 0, 6, 0, 0, 7],
     ]
 
     # Ініціалізує ігрову сітку та її стан.
@@ -28,7 +30,10 @@ class Grid:
 
         self.rows = rows
         self.cols = cols
-        self.cubes = [[Cube(template[i][j], i, j, width, height) for j in range(cols)] for i in range(rows)]
+        self.cubes = [
+            [Cube(template[i][j], i, j, width, height) for j in range(cols)]
+            for i in range(rows)
+        ]
         self.width = width
         self.height = height
         self.model = None
@@ -38,7 +43,9 @@ class Grid:
 
     # Синхронізує модель із поточними значеннями клітинок.
     def update_model(self):
-        self.model = [[self.cubes[i][j].value for j in range(self.cols)] for i in range(self.rows)]
+        self.model = [
+            [self.cubes[i][j].value for j in range(self.cols)] for i in range(self.rows)
+        ]
 
     # Перевіряє та фіксує число у вибраній клітинці.
     def place(self, val):
@@ -47,7 +54,7 @@ class Grid:
             self.cubes[row][col].set(val)
             self.update_model()
 
-            if valid(self.model, val, (row,col)) and self.solve():
+            if valid(self.model, val, (row, col)) and self.solve():
                 return True
             else:
                 self.cubes[row][col].set(0)
@@ -64,13 +71,17 @@ class Grid:
     def draw(self):
         # Draw Grid Lines
         gap = self.width / 9
-        for i in range(self.rows+1):
+        for i in range(self.rows + 1):
             if i % 3 == 0 and i != 0:
                 thick = 4
             else:
                 thick = 1
-            pygame.draw.line(self.win, (0,0,0), (0, i*gap), (self.width, i*gap), thick)
-            pygame.draw.line(self.win, (0, 0, 0), (i * gap, 0), (i * gap, self.height), thick)
+            pygame.draw.line(
+                self.win, (0, 0, 0), (0, i * gap), (self.width, i * gap), thick
+            )
+            pygame.draw.line(
+                self.win, (0, 0, 0), (i * gap, 0), (i * gap, self.height), thick
+            )
 
         # Draw Cubes
         for i in range(self.rows):
@@ -103,7 +114,7 @@ class Grid:
             gap = self.width / 9
             x = pos[0] // gap
             y = pos[1] // gap
-            return (int(y),int(x))
+            return (int(y), int(x))
         else:
             return None
 
@@ -188,14 +199,20 @@ class Cube:
         y = self.row * gap
 
         if self.temp != 0 and self.value == 0:
-            text = fnt.render(str(self.temp), 1, (128,128,128))
-            win.blit(text, (x+5, y+5))
-        elif not(self.value == 0):
+            text = fnt.render(str(self.temp), 1, (128, 128, 128))
+            win.blit(text, (x + 5, y + 5))
+        elif self.value != 0:
             text = fnt.render(str(self.value), 1, (0, 0, 0))
-            win.blit(text, (x + (gap/2 - text.get_width()/2), y + (gap/2 - text.get_height()/2)))
+            win.blit(
+                text,
+                (
+                    x + (gap / 2 - text.get_width() / 2),
+                    y + (gap / 2 - text.get_height() / 2),
+                ),
+            )
 
         if self.selected:
-            pygame.draw.rect(win, (255,0,0), (x,y, gap ,gap), 3)
+            pygame.draw.rect(win, (255, 0, 0), (x, y, gap, gap), 3)
 
     # Малює зміну клітинки під час розв'язання.
     def draw_change(self, win, g=True):
@@ -208,7 +225,13 @@ class Cube:
         pygame.draw.rect(win, (255, 255, 255), (x, y, gap, gap), 0)
 
         text = fnt.render(str(self.value), 1, (0, 0, 0))
-        win.blit(text, (x + (gap / 2 - text.get_width() / 2), y + (gap / 2 - text.get_height() / 2)))
+        win.blit(
+            text,
+            (
+                x + (gap / 2 - text.get_width() / 2),
+                y + (gap / 2 - text.get_height() / 2),
+            ),
+        )
         if g:
             pygame.draw.rect(win, (0, 255, 0), (x, y, gap, gap), 3)
         else:
@@ -249,9 +272,9 @@ def valid(bo, num, pos):
     box_x = pos[1] // 3
     box_y = pos[0] // 3
 
-    for i in range(box_y*3, box_y*3 + 3):
-        for j in range(box_x * 3, box_x*3 + 3):
-            if bo[i][j] == num and (i,j) != pos:
+    for i in range(box_y * 3, box_y * 3 + 3):
+        for j in range(box_x * 3, box_x * 3 + 3):
+            if bo[i][j] == num and (i, j) != pos:
                 return False
 
     return True
@@ -259,10 +282,10 @@ def valid(bo, num, pos):
 
 # Оновлює вікно гри, час, помилки та дошку.
 def redraw_window(win, board, time, strikes):
-    win.fill((255,255,255))
+    win.fill((255, 255, 255))
     # Draw time
     fnt = pygame.font.SysFont("comicsans", 40)
-    text = fnt.render("Time: " + format_time(time), 1, (0,0,0))
+    text = fnt.render("Time: " + format_time(time), 1, (0, 0, 0))
     win.blit(text, (540 - 160, 560))
     # Draw Strikes
     text = fnt.render("X " * strikes, 1, (255, 0, 0))
@@ -273,9 +296,8 @@ def redraw_window(win, board, time, strikes):
 
 # Перетворює кількість секунд у текстовий формат часу.
 def format_time(secs):
-    sec = secs%60
-    minute = secs//60
-    hour = minute//60
+    sec = secs % 60
+    minute = secs // 60
 
     mat = " " + str(minute) + ":" + str(sec)
     return mat
@@ -301,7 +323,11 @@ def move_selection(grid, dx, dy):
 def check_game_over(strikes, max_strikes=3):
     if isinstance(strikes, bool) or not isinstance(strikes, int) or strikes < 0:
         raise ValueError("Кількість помилок має бути невід'ємним цілим числом")
-    if isinstance(max_strikes, bool) or not isinstance(max_strikes, int) or max_strikes <= 0:
+    if (
+        isinstance(max_strikes, bool)
+        or not isinstance(max_strikes, int)
+        or max_strikes <= 0
+    ):
         raise ValueError("Ліміт помилок має бути додатним цілим числом")
     return strikes >= max_strikes
 
@@ -350,26 +376,32 @@ def reset_game(board_template, win=None):
 
 # Запускає головний цикл графічної гри.
 def main():
-    win = pygame.display.set_mode((540,600))
+    win = pygame.display.set_mode((540, 600))
     pygame.display.set_caption("Sudoku")
     board_template = [row[:] for row in Grid.board]
     board = Grid(9, 9, 540, 540, win, board_template)
     key = None
     run = True
     start = time.time()
+    final_time = start
     strikes = 0
     victory = False
     game_over = False
     while run:
-
-        play_time = round(time.time() - start) if not victory and not game_over else round(final_time - start)
+        play_time = (
+            round(time.time() - start)
+            if not victory and not game_over
+            else round(final_time - start)
+        )
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r and (victory or game_over):
-                    board, start, strikes, victory, game_over = reset_game(board_template, win)
+                    board, start, strikes, victory, game_over = reset_game(
+                        board_template, win
+                    )
                     key = None
                     continue
                 if victory or game_over:
@@ -459,9 +491,21 @@ def main():
 
         redraw_window(win, board, play_time, strikes)
         if victory:
-            draw_end_screen(win, "VICTORY!\nЧас: " + format_time(play_time) + "\nНатисніть R для рестарту", (0, 180, 0))
+            draw_end_screen(
+                win,
+                "VICTORY!\nЧас: "
+                + format_time(play_time)
+                + "\nНатисніть R для рестарту",
+                (0, 180, 0),
+            )
         elif game_over:
-            draw_end_screen(win, "GAME OVER\nЧас: " + format_time(play_time) + "\nНатисніть R для рестарту", (220, 0, 0))
+            draw_end_screen(
+                win,
+                "GAME OVER\nЧас: "
+                + format_time(play_time)
+                + "\nНатисніть R для рестарту",
+                (220, 0, 0),
+            )
         pygame.display.update()
 
 
