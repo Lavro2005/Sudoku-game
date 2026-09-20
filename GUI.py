@@ -465,5 +465,6 @@ def main():
         pygame.display.update()
 
 
-main()
-pygame.quit()
+if __name__ == "__main__":
+    main()
+    pygame.quit()
